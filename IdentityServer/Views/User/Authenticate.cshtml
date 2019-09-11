@@ -1,0 +1,113 @@
+﻿
+@{
+    ViewData["Title"] = "Authenticate";
+
+    <input type="button" value="Validate" id="Login" />
+
+    <input type="text" id="uid" />
+    <input type="password" id="pwd" />
+    <div id="error" style="display:none;color:red"></div>
+}
+
+<h1>Authenticate</h1>
+
+@section scripts{
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/jquery/dist/jquery.cookie.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            function getParams(name) {
+                var paramValue = undefined;
+                var paramstring = window.location.search.split("?")[1];
+                if (paramstring != null) {
+                    var params = paramstring.split(",")
+
+                    $.each(params, function (i, e) {
+                        var obj = e.split("=")
+                        if (name == obj[0])
+                            paramValue = obj[1];
+                    })
+                }
+                return paramValue;
+
+            }
+
+
+            $("#Login").on("click", function () {
+                Authenticate();
+            });
+
+            if ($.cookie("username") != null) {
+                Authenticate();
+            }
+
+
+            function Authenticate() {
+                if (getParams("ClientSecret") != null) {
+                    $.ajax({
+                        url: "http://localhost:51659/authenticate",
+                        type: "POST",
+                        data: JSON.stringify({
+                            "Id": "1",
+                            "FirstName": "a",
+                            "LastName": "a",
+                            "Username": $("#uid").val(),
+                            "Password": $("#pwd").val(),
+                            "Role": "a",
+                            "Token": "a",
+                            "ClientSecret": getParams("ClientSecret")
+                        }),
+                        beforeSend: function (jqXHR) {
+                            jqXHR.setRequestHeader("Content-Type", "application/json");
+                            jqXHR.setRequestHeader("Accept", "application/json");
+                            jqXHR.setRequestHeader("IsValidatedFromProvider", "Yes");
+                        },
+                        crossDomain: true,
+                        cache: false,
+                        success: function (cobj, status) {
+                            if (status != null) {
+                                window.location.replace(cobj);
+                            }
+                        },
+                        error: function (jqXHR, error, errorThrown) {
+                            $("#error").html(jqXHR.responseJSON.message).show();
+                        },
+                    });
+                }
+                else {
+                    $.ajax({
+                        url: "http://localhost:51659/appcentre",
+                        type: "POST",
+                        data: JSON.stringify({
+                            "Id": "1",
+                            "FirstName": "a",
+                            "LastName": "a",
+                            "Username": $.cookie("username")!=null?$.cookie("username"): $("#uid").val(),
+                            "Password": $("#pwd").val(),
+                            "Role": "a",
+                            "Token": "a",
+                            "ClientSecret": ""
+                        }),
+                        beforeSend: function (jqXHR) {
+                            jqXHR.setRequestHeader("Content-Type", "application/json");
+                            jqXHR.setRequestHeader("Accept", "application/json");
+                            jqXHR.setRequestHeader("IsValidatedFromProvider", "Yes");
+                        },
+                        crossDomain: true,
+                        cache: false,
+                        success: function (cobj, status) {
+                            if (status != null) {
+
+                                window.location.replace(cobj);
+                            }
+                        },
+                        error: function (jqXHR, error, errorThrown) {
+                            $("#error").html(jqXHR.responseJSON.message).show();
+                        },
+                    });
+                }
+            };
+        });
+    </script>
+
+}

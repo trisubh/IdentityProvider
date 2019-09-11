@@ -1,0 +1,164 @@
+﻿
+@{
+    ViewData["Title"] = "Sagitec App Centre";
+}
+
+<h1>Sagitec App Centre</h1>
+<div class="text-lg-right">
+    <input type="button" value="LogOut" id="Logout" />
+</div>
+
+<div id="apps"/>
+
+@section Scripts{
+
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/jquery/dist/jquery.cookie.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+             function getClients() {
+                var paramValue = undefined;
+                 var paramstring = window.location.search.split("?")[1];
+                 var paramstring = decodeURIComponent(paramstring);
+                 if (paramstring != null) {
+                     var params = paramstring.split("=");
+                     paramValue = JSON.parse(params[1])
+                }
+                return paramValue;
+            };
+
+            var Clients = getClients();
+
+            $.cookie("username", Clients.username)
+
+            $.each(Clients.clients, function (index, element) {
+                $("#apps").append(`<p class="cursor" data-secret="${element.ClientSecret}">${element.AppName}</p>`)
+            });
+
+            $("p[data-secret]").on("click", function (event) {
+                LoadApplication(this, event);
+            });
+
+             $("#Logout").on("click", function () {
+                DoLogout();
+            });
+
+            function LoadApplication(ele,e) {
+                $.ajax({
+                    url: "http://localhost:51659/authenticate",
+                    type: "POST",
+                    data: JSON.stringify({
+                        //"Id": "1",
+                        //"FirstName": "a",
+                        //"LastName": "a",
+                        "Username": $.cookie("username"),
+                        //"Password": "admin",
+                        //"Role": "a",
+                        //"Token": "a",
+                        "ClientSecret": $(ele).data("secret")
+                    }),
+                    beforeSend: function (jqXHR) {
+                        jqXHR.setRequestHeader("Content-Type", "application/json");
+                        jqXHR.setRequestHeader("Accept", "application/json")
+                    },
+                    crossDomain: true,
+                    cache: false,
+                    success: function (data, textStatus, request) {
+                        if (status != null && request.getResponseHeader("IsAuthenticated") != "true") {
+                            //window.location.replace(data);
+                            window.open(data, '_blank');
+                        }
+                    },
+                    error: function (request, textStatus, errorThrown) { },
+                });
+            }
+
+            function DoLogout() {
+                $.ajax({
+                    url: "http://localhost:51659/exitfromprovider",
+                    type: "POST",
+                    data: JSON.stringify({
+                        //"Id": "1",
+                        //"FirstName": "a",
+                        //"LastName": "a",
+                        "Username": $.cookie("username"),
+                        //"Password": "admin",
+                        //"Role": "a",
+                        //"Token": "a",
+                        "ClientSecret": ""
+                    }),
+                    beforeSend: function (jqXHR) {
+                        jqXHR.setRequestHeader("Content-Type", "application/json");
+                        jqXHR.setRequestHeader("Accept", "application/json")
+                    },
+                    crossDomain: true,
+                    cache: false,
+                    success: function (data, textStatus, request) {
+                        localStorage.clear();
+                        $.removeCookie("username", null);
+                        if (status != null && request.getResponseHeader("IsAuthenticated") != "true") {
+                            window.location.replace(data);
+                        }
+                    },
+                    error: function (request, textStatus, errorThrown) { },
+                })
+            };
+
+             function getParams(name) {
+                var paramValue = undefined;
+                var paramstring = window.location.search.split("?")[1];
+                if (paramstring != null) {
+                    var params = paramstring.split(",")
+
+                    $.each(params, function (i, e) {
+                        var obj = e.split("=")
+                        if (name == obj[0])
+                            paramValue = obj[1];
+                    })
+                }
+                return paramValue;
+
+            }
+
+             window.setInterval(function () {
+                if ($.cookie("username") == null && getParams("IsLoggedOff") != "true") {
+                    IsLoggedOff = true;
+                    $.ajax({
+                    url: "http://localhost:51659/exitfromprovider",
+                    type: "POST",
+                    data: JSON.stringify({
+                        //"Id": "1",
+                        //"FirstName": "a",
+                        //"LastName": "a",
+                        //"Username": $.cookie("username"),
+                        //"Password": "admin",
+                        //"Role": "a",
+                        //"Token": "a",
+                        "ClientSecret": "IsLoggedOff"
+                    }),
+                    beforeSend: function (jqXHR) {
+                        jqXHR.setRequestHeader("Content-Type", "application/json");
+                        jqXHR.setRequestHeader("Accept", "application/json")
+                    },
+                    crossDomain: true,
+                    cache: false,
+                    success: function (data, textStatus, request) {
+                        localStorage.clear();
+                        $.removeCookie("username", null);
+                        $("#Login").show();
+                        $("#Logout").hide();
+                        if (status != null && request.getResponseHeader("IsAuthenticated") != "true") {
+                            window.location.replace(data);
+                        }
+                    },
+                    error: function (request, textStatus, errorThrown) { },
+                })
+                }
+            }, 5000)
+
+        });
+    </script>
+
+    
+}
+          

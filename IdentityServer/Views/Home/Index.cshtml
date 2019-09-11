@@ -1,0 +1,205 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+<div class="text-lg-right">
+    <input type="button" value="Login" id="Login" />
+    <input type="button" value="LogOut" id="Logout" style="display:none" />
+</div>
+<div class="text-center">
+    <h1 class="display-4">Welcome</h1>
+    <p>Learn about <a href="https://docs.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+</div>
+
+
+
+@section scripts{
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+    <script src="~/lib/jquery/dist/jquery.cookie.js"></script>
+    <script type="text/javascript">
+        $(function (e) {
+
+            function DoLogin(e) {
+                debugger;
+                if ($.cookie("username") == null || e != undefined) {
+                    $.ajax({
+                        url: "http://localhost:51659/authenticate",
+                        type: "POST",
+                        data: JSON.stringify({
+                            //"Id": "1",
+                            //"FirstName": "a",
+                            //"LastName": "a",
+                            "Username": $.cookie("username"),
+                            //"Password": "admin",
+                            //"Role": "a",
+                            //"Token": "a",
+                            "ClientSecret": "38b980a5-117a-4512-9902-a277c1943af2"
+                        }),
+                        beforeSend: function (jqXHR) {
+                            jqXHR.setRequestHeader("Content-Type", "application/json");
+                            jqXHR.setRequestHeader("Accept", "application/json")
+                        },
+                        crossDomain: true,
+                        cache: false,
+                        success: function (data, textStatus, request) {
+                            if (status != null && request.getResponseHeader("IsAuthenticated") != "true") {
+                                window.location.replace(data);
+                            }
+                        },
+                        error: function (request, textStatus, errorThrown) { },
+                    })
+                }
+                else if (document.referrer=="")
+                {
+                     $.ajax({
+                        url: "http://localhost:51659/authenticate",
+                        type: "POST",
+                        data: JSON.stringify({
+                            //"Id": "1",
+                            //"FirstName": "a",
+                            //"LastName": "a",
+                            "Username": $.cookie("username"),
+                            //"Password": "admin",
+                            //"Role": "a",
+                            //"Token": "a",
+                            "ClientSecret": "38b980a5-117a-4512-9902-a277c1943af2"
+                        }),
+                        beforeSend: function (jqXHR) {
+                            jqXHR.setRequestHeader("Content-Type", "application/json");
+                            jqXHR.setRequestHeader("Accept", "application/json")
+                        },
+                        crossDomain: true,
+                        cache: false,
+                        success: function (data, textStatus, request) {
+                            if (status != null && request.getResponseHeader("IsAuthenticated") != "true") {
+                                window.location.replace(data);
+                            }
+                        },
+                        error: function (request, textStatus, errorThrown) { },
+                    })
+                }
+            };
+
+            function DoLogout() {
+                $.ajax({
+                    url: "http://localhost:51659/exit",
+                    type: "POST",
+                    data: JSON.stringify({
+                        //"Id": "1",
+                        //"FirstName": "a",
+                        //"LastName": "a",
+                        "Username": $.cookie("username"),
+                        //"Password": "admin",
+                        //"Role": "a",
+                        //"Token": "a",
+                        "ClientSecret": "38b980a5-117a-4512-9902-a277c1943af2"
+                    }),
+                    beforeSend: function (jqXHR) {
+                        jqXHR.setRequestHeader("Content-Type", "application/json");
+                        jqXHR.setRequestHeader("Accept", "application/json")
+                    },
+                    crossDomain: true,
+                    cache: false,
+                    success: function (data, textStatus, request) {
+                        localStorage.clear();
+                        $.removeCookie("username", null);
+                        $("#Login").show();
+                        $("#Logout").hide();
+                        if (status != null && request.getResponseHeader("IsAuthenticated") != "true") {
+                            window.location.replace(data);
+                        }
+                    },
+                    error: function (request, textStatus, errorThrown) { },
+                })
+            };
+
+
+            //DoLogin(window.event);
+
+            function getParams(name) {
+                var paramValue = undefined;
+                var paramstring = window.location.search.split("?")[1];
+                if (paramstring != null) {
+                    var params = paramstring.split(",")
+
+                    $.each(params, function (i, e) {
+                        var obj = e.split("=")
+                        if (name == obj[0])
+                            paramValue = obj[1];
+                    })
+                }
+                return paramValue;
+
+            }
+            debugger;
+            if (localStorage.getItem("OAuth") == null) {
+                if (getParams("OAuth") != undefined && getParams("uid") != undefined) {
+                    localStorage.setItem("OAuth", getParams("OAuth"));
+                    localStorage.setItem("ClientID", getParams("ClientID"));
+                    $.cookie("username", getParams("uid"))
+                    $("#Login").hide();
+                    $("#Logout").show();
+                }
+            }
+
+            if (localStorage.getItem("OAuth") != null) {
+                $("#Login").hide();
+                $("#Logout").show();
+            }
+
+            if (document.referrer == "") {
+                DoLogin(event);
+            }
+
+            $("#Login").on("click", function (event) {
+                DoLogin(event);
+            });
+
+            $("#Logout").on("click", function () {
+                DoLogout();
+            });
+
+            window.setInterval(function () {
+                if ($.cookie("username") == null && getParams("IsLoggedOff") != "true") {
+                    IsLoggedOff = true;
+                    $.ajax({
+                    url: "http://localhost:51659/Logoff",
+                    type: "POST",
+                    data: JSON.stringify({
+                        //"Id": "1",
+                        //"FirstName": "a",
+                        //"LastName": "a",
+                        //"Username": $.cookie("username"),
+                        //"Password": "admin",
+                        //"Role": "a",
+                        //"Token": "a",
+                        "ClientSecret": "38b980a5-117a-4512-9902-a277c1943af2"
+                    }),
+                    beforeSend: function (jqXHR) {
+                        jqXHR.setRequestHeader("Content-Type", "application/json");
+                        jqXHR.setRequestHeader("Accept", "application/json")
+                    },
+                    crossDomain: true,
+                    cache: false,
+                    success: function (data, textStatus, request) {
+                        localStorage.clear();
+                        $.removeCookie("username", null);
+                        $("#Login").show();
+                        $("#Logout").hide();
+                        if (status != null && request.getResponseHeader("IsAuthenticated") != "true") {
+                            window.location.replace(data);
+                        }
+                    },
+                    error: function (request, textStatus, errorThrown) { },
+                })
+                }
+            }, 5000)
+
+        })
+
+
+
+
+    </script>
+
+}
